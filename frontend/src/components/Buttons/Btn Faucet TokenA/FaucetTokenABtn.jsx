@@ -12,7 +12,8 @@ const FaucetTokenABtn = ({ contractTokenA }) => {
   const updateBalance = async () => {
     if (!contractTokenA || !account) return;
     try {
-      const balance = await contractTokenA.balanceOf(account);
+      let balance = await contractTokenA.balanceOf(account);
+      balance = Number(balance) / 10 ** 18;
       setMintedBalance(balance);
     } catch (error) {
       console.error("Error updating balance:", error);
@@ -53,6 +54,13 @@ const FaucetTokenABtn = ({ contractTokenA }) => {
     e.preventDefault();
     let amount = document.getElementById("faucetTokenA").value;
     console.log('amount TokenA minted', amount);
+
+    if (!(amount > 0 && amount < 5000000000)) {
+      alert("Invalid amount");
+      document.getElementById("faucetTokenA").value = "";
+      return;
+    }
+
     amount = tokens(amount);
 
     // Kiểm tra nếu contract không tồn tại
@@ -93,7 +101,7 @@ const FaucetTokenABtn = ({ contractTokenA }) => {
           htmlFor="faucetTokenA"
           className='text-sm font-medium text-gray-700'
         >
-          Faucet TokenA: 
+          Faucet TokenA:
         </label>
         <input
           className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 placeholder-gray-400 shadow-sm"
@@ -113,7 +121,7 @@ const FaucetTokenABtn = ({ contractTokenA }) => {
 
       </form>
       <div>
-        {tokenData.name} ({tokenData.symbol}) balance: {mintedBalance.toString()} {tokenData.symbol}
+        {tokenData.name} ({tokenData.symbol}) balance: {Math.round(mintedBalance * 10000) / 10000} {tokenData.symbol}
       </div>
     </div>
   );

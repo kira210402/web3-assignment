@@ -1,14 +1,17 @@
 import useAccountStore from '../../../utils/stores/useAccountStore';
 import useMintedBalanceStore from '../../../utils/stores/useMintedBalanceStore';
+import useReloadDepositInfoStore from '../../../utils/stores/useReloadDepositInfoStore';
 
 const ClaimRewardBtn = ({ contractLogic, contractTokenA }) => {
   const { account } = useAccountStore();
   const {setMintedBalance} = useMintedBalanceStore();
+  const { setIsReloadDepositInfo } = useReloadDepositInfoStore();
 
   const updateBalance = async () => {
     if (!contractTokenA || !account) return;
     try {
-      const balance = await contractTokenA.balanceOf(account);
+      let balance = await contractTokenA.balanceOf(account);
+      balance = Number(balance) / 10 ** 18;
       setMintedBalance(balance);
     } catch (error) {
       console.error("Error updating balance:", error);
@@ -33,6 +36,9 @@ const ClaimRewardBtn = ({ contractLogic, contractTokenA }) => {
         throw new Error("Transaction failed");
       }
       alert("Claim Reward successful");
+      
+      setIsReloadDepositInfo(true);
+
       console.log("Claim Reward successful");
       updateBalance();
     } catch (error) {

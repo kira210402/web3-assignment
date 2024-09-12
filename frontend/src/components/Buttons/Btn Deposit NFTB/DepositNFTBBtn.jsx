@@ -1,8 +1,19 @@
+import useNFTBsOwnedStore from '../../../utils/stores/useNFTBsOwnedStore';
+import useReloadDepositInfoStore from '../../../utils/stores/useReloadDepositInfoStore';
+
 const DepositNFTBBtn = ({contractLogic, contractNFTB}) => {
+  const { NFTBsOwned } = useNFTBsOwnedStore();
+  const {setIsReloadDepositInfo} = useReloadDepositInfoStore();
+
   const depositNFTB = async (e) => {
     e.preventDefault();
     const tokenId = document.getElementById("depositNFTB").value;
-    console.log('tokenId', tokenId);
+
+    if (!tokenId || !NFTBsOwned.includes(Number(tokenId))) {
+      alert("You don't own this NFTB");
+      document.getElementById("depositNFTB").value = "";
+      return;
+    }
 
     if (!contractNFTB || !contractLogic) {
       console.error("Contracts not initialized correctly");
@@ -26,6 +37,8 @@ const DepositNFTBBtn = ({contractLogic, contractNFTB}) => {
       }
       alert("Deposit successful");
       console.log("Deposit successful");
+
+      setIsReloadDepositInfo(true);
 
       // set input value to empty
       document.getElementById("depositNFTB").value = "";

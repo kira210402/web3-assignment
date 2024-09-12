@@ -1,8 +1,20 @@
-const WithdrawNFTBBtn = ({contractLogic, contractNFTB}) => {
-  const withdrawNFTB = async(e) => {
+import useNFTBsDepositedStore from '../../../utils/stores/useNFTBsDepositedStore';
+import useReloadDepositInfoStore from '../../../utils/stores/useReloadDepositInfoStore';
+
+const WithdrawNFTBBtn = ({ contractLogic, contractNFTB }) => {
+  const { NFTBsDeposited } = useNFTBsDepositedStore();
+  const { setIsReloadDepositInfo } = useReloadDepositInfoStore();
+
+  const withdrawNFTB = async (e) => {
     e.preventDefault();
     const tokenId = document.getElementById("withdrawNFTB").value;
     console.log('tokenId', tokenId);
+
+    if (!tokenId || !NFTBsDeposited.includes(Number(tokenId))) {
+      alert("this NFTB is not deposited");
+      document.getElementById("withdrawNFTB").value = "";
+      return;
+    }
 
     if (!contractNFTB || !contractLogic) {
       console.error("Contracts not initialized correctly");
@@ -21,6 +33,8 @@ const WithdrawNFTBBtn = ({contractLogic, contractNFTB}) => {
       alert("Withdraw NFTB successful");
       console.log("Withdraw NFTB successful");
 
+      setIsReloadDepositInfo(true);
+
       // set input value to empty
       document.getElementById("withdrawNFTB").value = "";
     } catch (error) {
@@ -30,12 +44,12 @@ const WithdrawNFTBBtn = ({contractLogic, contractNFTB}) => {
 
   return (
     <>
-    <form className="flex items-center gap-2 mb-4">
+      <form className="flex items-center gap-2 mb-4">
         <label
           htmlFor="withdrawNFTB"
           className='text-sm font-medium text-gray-700'
         >
-          Withdraw NFTB: 
+          Withdraw NFTB:
         </label>
         <input
           className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-700 placeholder-gray-400 shadow-sm"

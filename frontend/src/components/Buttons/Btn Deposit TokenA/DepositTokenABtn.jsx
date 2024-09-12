@@ -1,15 +1,18 @@
 import useAccountStore from '../../../utils/stores/useAccountStore';
 import useMintedBalanceStore from '../../../utils/stores/useMintedBalanceStore';
+import useReloadDepositInfoStore from '../../../utils/stores/useReloadDepositInfoStore';
 import { tokens } from '../../../utils/tokens';
 
 const DepositTokenABtn = ({ contractTokenA, contractLogic }) => {
   const { account } = useAccountStore();
-  const { setMintedBalance } = useMintedBalanceStore();
+  const { setMintedBalance, mintedBalance } = useMintedBalanceStore();
+  const { setIsReloadDepositInfo } = useReloadDepositInfoStore();
 
   const updateBalance = async () => {
     if (!contractTokenA || !account) return;
     try {
-      const balance = await contractTokenA.balanceOf(account);
+      let balance = await contractTokenA.balanceOf(account);
+      balance = Number(balance) / 10 ** 18;
       setMintedBalance(balance);
     } catch (error) {
       console.error("Error updating balance:", error);
@@ -20,6 +23,12 @@ const DepositTokenABtn = ({ contractTokenA, contractLogic }) => {
     e.preventDefault();
     let amount = document.getElementById("depositTokenA").value;
     console.log('amount', amount);
+    if (!(amount > 0 && amount < mintedBalance)) {
+      alert("Invalid amount");
+      document.getElementById("depositTokenA").value = "";
+      return;
+    }
+
     amount = tokens(amount);
 
     if (!contractTokenA || !contractLogic) {
@@ -48,6 +57,7 @@ const DepositTokenABtn = ({ contractTokenA, contractLogic }) => {
 
       // set input value to empty
       document.getElementById("depositTokenA").value = "";
+      setIsReloadDepositInfo(true);
     } catch (error) {
       console.error("Deposit failed:", error);
     }
@@ -67,8 +77,6 @@ const DepositTokenABtn = ({ contractTokenA, contractLogic }) => {
           type="number"
           name="depositTokenA"
           id="depositTokenA"
-          min="0"
-          max="5000000000"
           required
         />
         <button
