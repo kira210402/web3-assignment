@@ -24,4 +24,19 @@ contract NFTB is ERC721 {
     function getOwnedTokens(address owner) public view returns (uint256[] memory) {
         return _ownedTokens[owner];
     }
+
+    function removeOwnedToken(address owner, uint256 tokenId) external {
+        uint256[] storage ownedTokens = _ownedTokens[owner];
+        for (uint256 i = 0; i < ownedTokens.length; i++) {
+            if (ownedTokens[i] == tokenId) {
+                ownedTokens[i] = ownedTokens[ownedTokens.length - 1];
+                ownedTokens.pop();
+                break;
+            }
+        }
+    }
+
+    function addOwnedToken(address owner, uint256 tokenId) external {
+        _ownedTokens[owner].push(tokenId);
+    }
 }

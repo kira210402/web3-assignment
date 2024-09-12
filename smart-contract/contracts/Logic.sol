@@ -18,6 +18,7 @@ contract Logic is Ownable {
     // data structure
     mapping(address => DepositInfo) public deposits;
     mapping(address => uint[]) userNFTDepositeds;
+    address[] public depositors; // Track addresses with deposits
 
     struct DepositInfo {
         uint256 amountTokenA;
@@ -29,10 +30,22 @@ contract Logic is Ownable {
     }
 
     // events
-    event DepositTokenA(address indexed user, uint256 amount, uint256 timestamp);
+    event DepositTokenA(
+        address indexed user,
+        uint256 amount,
+        uint256 timestamp
+    );
     event DepositNFTB(address indexed user, uint256 tokenId, uint256 timestamp);
-    event WithdrawTokenA(address indexed user, uint256 amount, uint256 timestamp);
-    event WithdrawNFTB(address indexed user, uint256 tokenId, uint256 timestamp);
+    event WithdrawTokenA(
+        address indexed user,
+        uint256 amount,
+        uint256 timestamp
+    );
+    event WithdrawNFTB(
+        address indexed user,
+        uint256 tokenId,
+        uint256 timestamp
+    );
     event ClaimReward(address indexed user, uint256 amount, uint256 timestamp);
 
     // constructor
@@ -54,6 +67,7 @@ contract Logic is Ownable {
         if (deposits[msg.sender].amountTokenA == 0) {
             deposits[msg.sender].apr = BASE_APR;
             deposits[msg.sender].interest = 0;
+            depositors.push(msg.sender);
         }
 
         deposits[msg.sender].amountTokenA += _amount;
@@ -68,9 +82,9 @@ contract Logic is Ownable {
             deposits[msg.sender].nftCount++;
         }
 
-        emit DepositTokenA(msg.sender, _amount, block.timestamp);
-
         tokenA.transferFrom(msg.sender, address(this), _amount);
+
+        emit DepositTokenA(msg.sender, _amount, block.timestamp);
     }
 
     function depositNFTB(uint256 _tokenId) external {
@@ -81,6 +95,8 @@ contract Logic is Ownable {
             "You do not own this NFT"
         );
 
+        nftB.removeOwnedToken(msg.sender, _tokenId);
+
         // update the deposit info
         deposits[msg.sender].nftCount++;
         deposits[msg.sender].apr += BASE_APR_INCREMENT;
@@ -89,9 +105,9 @@ contract Logic is Ownable {
         uint[] storage userDepositNFT = userNFTDepositeds[msg.sender];
         userDepositNFT.push(_tokenId);
 
-        emit DepositNFTB(msg.sender, _tokenId, block.timestamp);
-
         nftB.transferFrom(msg.sender, address(this), _tokenId);
+
+        emit DepositNFTB(msg.sender, _tokenId, block.timestamp);
     }
 
     function withdrawTokenA(uint256 _amount) external {
@@ -103,15 +119,16 @@ contract Logic is Ownable {
             "Insufficient balance"
         );
         require(
-            block.timestamp - deposits[msg.sender].timestampDepositTokenA >= LOCK_TIME,
+            block.timestamp - deposits[msg.sender].timestampDepositTokenA >=
+                LOCK_TIME,
             "Tokens are locked"
         );
 
         deposits[msg.sender].amountTokenA -= _amount;
 
-        emit WithdrawTokenA(msg.sender, _amount, block.timestamp);
-
         tokenA.transfer(msg.sender, _amount);
+
+        emit WithdrawTokenA(msg.sender, _amount, block.timestamp);
     }
 
     function withdrawNFTB(uint256 _tokenId) external {
@@ -141,9 +158,11 @@ contract Logic is Ownable {
             }
         }
 
-        emit WithdrawNFTB(msg.sender, _tokenId, block.timestamp);
+        nftB.addOwnedToken(msg.sender, _tokenId);
 
         nftB.transferFrom(address(this), msg.sender, _tokenId);
+
+        emit WithdrawNFTB(msg.sender, _tokenId, block.timestamp);
     }
 
     function claimReward() external {
@@ -153,19 +172,10 @@ contract Logic is Ownable {
         uint256 reward = deposits[msg.sender].interest;
         deposits[msg.sender].interest = 0;
 
+        // tokenA.transfer(msg.sender, reward);
+        tokenA.claimReward(msg.sender, reward);
+
         emit ClaimReward(msg.sender, reward, block.timestamp);
-
-        tokenA.transfer(msg.sender, reward);
-    }
-
-    // support functions
-    function updateInterest(address _user) public {
-        uint256 duration = block.timestamp - deposits[_user].timestamp;
-        uint256 interest = (deposits[_user].amountTokenA *
-            deposits[_user].apr *
-            duration) / 365 days;
-        deposits[_user].interest += interest;
-        deposits[_user].timestamp = block.timestamp;
     }
 
     // getters functions
@@ -205,5 +215,28 @@ contract Logic is Ownable {
     // setter functions
     function setAPR(uint8 APR) external onlyOwner {
         BASE_APR = APR;
+        updateAllAPR();
+    }
+
+    // support functions
+    function updateInterest(address _user) public {
+        uint256 duration = block.timestamp - deposits[_user].timestamp;
+        uint256 interest = (deposits[_user].amountTokenA *
+            deposits[_user].apr *
+            duration) / (100 * 365 days);
+        deposits[_user].interest += interest;
+        deposits[_user].timestamp = block.timestamp;
+    }
+
+    function updateAllAPR() internal {
+        for (uint i = 0; i < depositors.length; i++) {
+            address user = depositors[i];
+            DepositInfo storage deposit = deposits[user];
+
+            // Update the base APR and add increments for NFTs
+            deposit.apr =
+                BASE_APR +
+                (uint8(userNFTDepositeds[user].length) * BASE_APR_INCREMENT);
+        }
     }
 }
