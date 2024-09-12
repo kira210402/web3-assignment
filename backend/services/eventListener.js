@@ -35,11 +35,11 @@ const startListening = async () => {
       return;
     }
   } else {
-    const blocks = currentBlock - 43752444;
+    const blocks = currentBlock - 43802811;
     const CallNumbers = Math.ceil(blocks / 10000);
     for (let i = 0; i < CallNumbers; i++) {
-      const fromBlock = 43752444 + i * 10000;
-      const toBlock = 43752444 + (i + 1) * 10000;
+      const fromBlock = 43802811 + i * 10000;
+      const toBlock = 43802811 + (i + 1) * 10000;
       const event = await contract.getPastEvents("allEvents", {
         fromBlock,
         toBlock,
