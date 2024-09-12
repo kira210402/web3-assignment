@@ -64,7 +64,7 @@ const FaucetTokenABtn = ({ contractTokenA }) => {
     amount = tokens(amount);
 
     // Kiểm tra nếu contract không tồn tại
-    if (!contractTokenA || typeof contractTokenA.mint !== "function") {
+    if (!contractTokenA || typeof contractTokenA.faucet !== "function") {
       console.error("Mint method is not available on the contract");
       return;
     }
@@ -76,7 +76,7 @@ const FaucetTokenABtn = ({ contractTokenA }) => {
     }
 
     try {
-      const tx = await contractTokenA.mint(amount, { from: account });
+      const tx = await contractTokenA.faucet(amount, { from: account });
       await tx.wait();
       console.log("Mint successful");
       alert("Mint successful");

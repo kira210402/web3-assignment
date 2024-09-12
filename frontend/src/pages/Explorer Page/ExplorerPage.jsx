@@ -35,6 +35,7 @@ const ExplorerPage = () => {
   const fetchTransactions = async () => {
     try {
       const res = await axios.get(`/api`);
+      // const res = await axios.get("http://localhost:5000/api");
       res.data.sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp));
       setTransactions(res.data);
     } catch (error) {
@@ -102,11 +103,11 @@ const ExplorerPage = () => {
             <th className="py-2 px-4 text-left">Age</th>
             <th className="py-2 px-4 text-left">From</th>
             <th className="py-2 px-4 text-left">To</th>
-            <th className="py-2 px-4 text-left">Amount</th>
+            <th className="py-2 px-4 text-left">Amount (ether)</th>
             <th className="py-2 px-4 text-left">Token ID</th>
             {/* <th className="py-2 px-4 text-left">Gas Used</th>
             <th className="py-2 px-4 text-left">Gas Price</th> */}
-            <th className="py-2 px-4 text-left">Txn Fee</th>
+            <th className="py-2 px-4 text-left">Txn Fee (gwei)</th>
           </tr>
         </thead>
         <tbody>
@@ -118,11 +119,11 @@ const ExplorerPage = () => {
               <td className="py-2 px-4">{timeAgo(tx.timestamp)}</td>
               <td className="py-2 px-4">{`${tx.user.substring(0, 6)}...${tx.user.slice(-4)}`}</td>
               <td className="py-2 px-4">{`${ContractAddress.Logic.substring(0, 6)}...${ContractAddress.Logic.slice(-4)}`}</td>
-              <td className="py-2 px-4">{tx.amount / 10 ** 18}</td>
+              <td className="py-2 px-4">{Math.round((tx.amount / 10 ** 18) * 1000) / 1000}</td>
               <td className="py-2 px-4">{tx.tokenId ?? 'N/A'}</td>
               {/* <td className="py-2 px-4">{tx.gasUsed}</td>
               <td className="py-2 px-4">{tx.gasPrice}</td> */}
-              <td className="py-2 px-4">{tx.txnFee}</td>
+              <td className="py-2 px-4">{Math.round((tx.txnFee / 10 ** 9) * 1000) / 1000}</td>
             </tr>
           ))}
         </tbody>

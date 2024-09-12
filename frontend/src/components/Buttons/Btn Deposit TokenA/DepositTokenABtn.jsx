@@ -23,7 +23,7 @@ const DepositTokenABtn = ({ contractTokenA, contractLogic }) => {
     e.preventDefault();
     let amount = document.getElementById("depositTokenA").value;
     console.log('amount', amount);
-    if (!(amount > 0 && amount < mintedBalance)) {
+    if (!(amount > 0 && amount <= mintedBalance)) {
       alert("Invalid amount");
       document.getElementById("depositTokenA").value = "";
       return;
