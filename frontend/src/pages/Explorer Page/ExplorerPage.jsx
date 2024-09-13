@@ -28,14 +28,15 @@ const timeAgo = (timestamp) => {
 const ExplorerPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState(''); // Thêm state để lưu từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   const transactionsPerPage = 10;
 
   const fetchTransactions = async () => {
     try {
-      const res = await axios.get(`/api`);
-      // const res = await axios.get("http://localhost:5000/api");
+      // const res = await axios.get(`/api`);
+      const res = await axios.get("http://localhost:5000/api");
       res.data.sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp));
       setTransactions(res.data);
     } catch (error) {
@@ -65,13 +66,23 @@ const ExplorerPage = () => {
   // handle search
   const handleSearch = async () => {
     try {
-      const res = await axios.get(`/api/search/${searchQuery}`);
+      // const res = await axios.get(`/api/search/${searchQuery}`);
+      const res = await axios.get(`http://localhost:5000/api/search/${searchQuery}`);
       res.data.sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp));
       setTransactions(res.data);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
   }
+
+  const handleCopy = (text, index) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  };
 
   return (
     <div className="p-4">
@@ -113,14 +124,61 @@ const ExplorerPage = () => {
         <tbody>
           {currentTransactions.map((tx, index) => (
             <tr key={index} className="border-b hover:bg-gray-50">
-              <td className="py-2 px-4">{`${tx.transactionHash.substring(0, 6)}...${tx.transactionHash.slice(-4)}`}</td>
+              <td className="py-2 px-4">{`${tx.transactionHash.substring(0, 6)}...${tx.transactionHash.slice(-4)}`}
+                <button
+                  onClick={() => handleCopy(tx.transactionHash, tx.transactionHash)}
+                  className="ml-1 text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                  title="Copy full hash"
+                >
+                  {copiedIndex === tx.transactionHash ? '✓' : '📋'}
+                </button>
+              </td>
               <td className="py-2 px-4">{tx.type}</td>
-              <td className="py-2 px-4">{tx.blockNumber}</td>
+              <td className="py-2 px-4">{tx.blockNumber}
+                <button
+                  onClick={() => handleCopy(tx.blockNumber, tx.blockNumber)}
+                  className="ml-1 text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                  title="Copy full hash"
+                >
+                  {copiedIndex === tx.blockNumber ? '✓' : '📋'}
+                </button>
+              </td>
               <td className="py-2 px-4">{timeAgo(tx.timestamp)}</td>
-              <td className="py-2 px-4">{`${tx.user.substring(0, 6)}...${tx.user.slice(-4)}`}</td>
-              <td className="py-2 px-4">{`${ContractAddress.Logic.substring(0, 6)}...${ContractAddress.Logic.slice(-4)}`}</td>
+              <td className="py-2 px-4">{`${tx.user.substring(0, 6)}...${tx.user.slice(-4)}`}
+                <button
+                  onClick={() => handleCopy(tx.user, (tx.user + index))}
+                  className="ml-1 text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                  title="Copy full hash"
+                >
+                  {copiedIndex === (tx.user + index) ? '✓' : '📋'}
+                </button>
+              </td>
+              <td className="py-2 px-4">{`${ContractAddress.Logic.substring(0, 6)}...${ContractAddress.Logic.slice(-4)}`}
+                <button
+                  onClick={() => handleCopy(ContractAddress.Logic, (ContractAddress.Logic + index))}
+                  className="ml-1 text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                  title="Copy full hash"
+                >
+                  {copiedIndex === (ContractAddress.Logic + index) ? '✓' : '📋'}
+                </button>
+              </td>
               <td className="py-2 px-4">{Math.round((tx.amount / 10 ** 18) * 1000) / 1000}</td>
-              <td className="py-2 px-4">{tx.tokenId ?? 'N/A'}</td>
+              <td className="py-2 px-4 flex items-center">
+                {tx.tokenId ? (
+                  <>
+                    {tx.tokenId}
+                    <button
+                      onClick={() => handleCopy(tx.tokenId, index)}
+                      className="ml-1 text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                      title="Copy Token ID"
+                    >
+                      {copiedIndex === index ? '✓' : '📋'}
+                    </button>
+                  </>
+                ) : (
+                  'N/A'
+                )}
+              </td>
               {/* <td className="py-2 px-4">{tx.gasUsed}</td>
               <td className="py-2 px-4">{tx.gasPrice}</td> */}
               <td className="py-2 px-4">{Math.round((tx.txnFee / 10 ** 9) * 1000) / 1000}</td>

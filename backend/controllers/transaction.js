@@ -21,10 +21,10 @@ const transactionController = {
           { transactionHash: searchQuery },
           { tokenId: searchQuery },
           { user: searchQuery },
+          { type: searchQuery },
         ],
       });
       res.json(transactions);
-      console.log('transactions', transactions);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching transactions' });
     }
